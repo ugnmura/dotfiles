@@ -1,0 +1,39 @@
+#!/bin/sh
+
+criteria='[app_id="quick-terminal"]'
+
+tree=$(swaymsg -t get_tree --raw)
+scratchpad_state=$(printf '%s' "$tree" \
+    | jq -r '.. | objects | select(.app_id? == "quick-terminal") | .scratchpad_state' \
+    | head -n 1)
+visible=$(printf '%s' "$tree" \
+    | jq -r '.. | objects | select(.app_id? == "quick-terminal") | .visible' \
+    | head -n 1)
+
+if [ -n "$scratchpad_state" ]; then
+    if [ "$visible" = true ] && [ "$scratchpad_state" != none ]; then
+        exec swaymsg "$criteria move scratchpad"
+    fi
+    if [ "$scratchpad_state" = none ]; then
+        swaymsg "$criteria floating enable, resize set width 1100 height 680, move position center, move scratchpad" \
+            >/dev/null
+    fi
+    exec swaymsg "$criteria scratchpad show"
+fi
+
+setsid foot --app-id=quick-terminal --title='Quick Terminal' >/dev/null 2>&1 &
+
+attempt=0
+while [ "$attempt" -lt 40 ]; do
+    if swaymsg -t get_tree --raw \
+        | jq -e '.. | objects | select(.app_id? == "quick-terminal")' \
+        >/dev/null 2>&1; then
+        swaymsg "$criteria floating enable, resize set width 1100 height 680, move position center, move scratchpad" \
+            >/dev/null
+        exec swaymsg "$criteria scratchpad show"
+    fi
+    attempt=$((attempt + 1))
+    sleep 0.05
+done
+
+exit 1

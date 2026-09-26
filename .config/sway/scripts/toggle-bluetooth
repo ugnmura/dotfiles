@@ -1,0 +1,18 @@
+#!/bin/sh
+
+mode=${1:-toggle}
+state=$(bluetoothctl show 2>/dev/null | awk '$1 == "Powered:" { print $2; exit }')
+
+case "$mode" in
+    status)
+        [ "$state" = yes ] && printf 'true\n' || printf 'false\n'
+        ;;
+    toggle)
+        if [ "$state" = yes ]; then
+            bluetoothctl power off
+        else
+            bluetoothctl power on
+        fi
+        ;;
+    *) exit 2 ;;
+esac

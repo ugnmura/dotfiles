@@ -1,0 +1,18 @@
+#!/bin/sh
+
+mode=${1:-toggle}
+state=$(nmcli radio wifi 2>/dev/null || printf 'disabled')
+
+case "$mode" in
+    status)
+        [ "$state" = enabled ] && printf 'true\n' || printf 'false\n'
+        ;;
+    toggle)
+        if [ "$state" = enabled ]; then
+            nmcli radio wifi off
+        else
+            nmcli radio wifi on
+        fi
+        ;;
+    *) exit 2 ;;
+esac

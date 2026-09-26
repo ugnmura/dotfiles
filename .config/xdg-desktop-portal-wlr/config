@@ -1,0 +1,4 @@
+[screencast]
+chooser_type=default
+max_fps=60
+force_mod_linear=1

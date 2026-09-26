@@ -1,0 +1,56 @@
+#!/bin/bash
+
+set -euo pipefail
+
+profile_dir=/home/eugene/.config/kanshi/profiles
+mkdir -p "$profile_dir"
+
+outputs=$(swaymsg -t get_outputs --raw)
+mapfile -t output_names < <(printf '%s\n' "$outputs" | jq -r '.[].name' | LC_ALL=C sort)
+
+[ "${#output_names[@]}" -gt 0 ] || exit 1
+
+joined_names=$(IFS=+; printf '%s' "${output_names[*]}")
+case "$joined_names" in
+    HDMI-A-1+eDP-1)
+        profile_name=dual-display
+        profile_file="$profile_dir/10-dual-display.conf"
+        ;;
+    eDP-1)
+        profile_name=laptop-only
+        profile_file="$profile_dir/90-laptop-only.conf"
+        ;;
+    *)
+        profile_slug=$(printf '%s' "$joined_names" \
+            | tr -c 'A-Za-z0-9._-' '-' \
+            | sed 's/--*/-/g; s/^-//; s/-$//')
+        profile_name="auto-$profile_slug"
+        profile_file="$profile_dir/15-$profile_slug.conf"
+        ;;
+esac
+
+temporary_file=$(mktemp "$profile_dir/.${profile_name}.XXXXXX")
+cleanup() {
+    if [ -e "$temporary_file" ]; then
+        unlink "$temporary_file"
+    fi
+}
+trap cleanup EXIT HUP INT TERM
+
+{
+    printf '# Saved automatically from the graphical display settings.\n'
+    printf 'profile %s {\n' "$profile_name"
+    printf '%s\n' "$outputs" | jq -r '.[] |
+        if .active then
+            "    output \(.name) enable mode \(.current_mode.width)x\(.current_mode.height)@\(.current_mode.refresh / 1000)Hz position \(.rect.x),\(.rect.y) scale \(.scale) transform \(.transform)"
+        else
+            "    output \(.name) disable"
+        end'
+    printf '}\n'
+} >"$temporary_file"
+
+chmod 600 "$temporary_file"
+mv -f "$temporary_file" "$profile_file"
+trap - EXIT HUP INT TERM
+
+printf '%s\n' "$profile_name"

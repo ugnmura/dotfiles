@@ -1,0 +1,658 @@
+:root {
+  --cc-bg: rgba(13, 14, 22, 0.97);
+  --noti-border-color: rgba(203, 166, 247, 0.18);
+  --noti-bg: 28, 28, 42;
+  --noti-bg-alpha: 0.94;
+  --noti-bg-darker: rgb(16, 16, 24);
+  --noti-bg-hover: rgb(47, 46, 66);
+  --noti-bg-focus: rgba(203, 166, 247, 0.14);
+  --noti-close-bg: rgba(127, 132, 156, 0.14);
+  --noti-close-bg-hover: rgb(243, 139, 168);
+  --text-color: rgb(238, 236, 246);
+  --text-color-disabled: rgb(124, 121, 143);
+  --bg-selected: rgb(203, 166, 247);
+  --surface: rgba(24, 24, 36, 0.86);
+  --surface-raised: rgba(42, 42, 61, 0.76);
+  --surface-hover: rgba(59, 61, 85, 0.88);
+  --surface-border: rgba(205, 198, 226, 0.08);
+  --text-secondary: rgb(184, 180, 202);
+  --text-muted: rgb(127, 132, 156);
+  --accent: rgb(203, 166, 247);
+  --accent-soft: rgba(203, 166, 247, 0.18);
+  --blue: rgb(137, 180, 250);
+  --danger: rgb(243, 139, 168);
+  --border: 1px solid var(--noti-border-color);
+  --border-radius: 14px;
+  --notification-icon-size: 32px;
+  --notification-app-icon-size: 18px;
+  --notification-group-icon-size: 28px;
+  --notification-shadow: none;
+  --font-size-body: 12px;
+  --font-size-summary: 13px;
+  --hover-transition: none;
+  --hover-tranistion: none;
+}
+
+* {
+  font-family: "Noto Sans", "Symbols Nerd Font Mono", sans-serif;
+}
+
+notificationwindow,
+blankwindow,
+.blank-window,
+.floating-notifications {
+  background: transparent;
+}
+
+button,
+switch,
+scale,
+.notification,
+.notification-row {
+  transition: var(--hover-transition);
+}
+
+button:focus,
+switch:focus,
+scale:focus,
+.notification-row:focus {
+  outline: 2px solid rgba(203, 166, 247, 0.62);
+}
+
+/* Control-center shell */
+.control-center {
+  padding: 8px;
+  border: 1px solid rgba(203, 166, 247, 0.14);
+  border-radius: 15px;
+  background: var(--cc-bg);
+  color: var(--text-color);
+  box-shadow: none;
+  opacity: 1;
+}
+
+.control-center .control-center-list {
+  background: transparent;
+}
+
+.widget-notifications {
+  margin: 0 10px 10px;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+}
+
+.control-center .control-center-list-placeholder {
+  min-height: 150px;
+  padding: 24px 12px;
+  color: var(--text-muted);
+  opacity: 1;
+}
+
+.control-center .control-center-list-placeholder image {
+  -gtk-icon-size: 44px;
+  color: rgba(203, 166, 247, 0.58);
+}
+
+.control-center .control-center-list-placeholder label {
+  margin-top: 12px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* Live weather preview */
+.widget-label.weather {
+  min-height: 58px;
+  margin: 8px 12px 0;
+  padding: 10px 15px 4px;
+  border: 1px solid rgba(137, 180, 250, 0.22);
+  border-bottom: none;
+  border-radius: 13px 13px 0 0;
+  background-color: rgba(16, 16, 24, 0.72);
+  background-image:
+    linear-gradient(
+      90deg,
+      rgba(16, 16, 24, 0.88) 0%,
+      rgba(16, 16, 24, 0.58) 58%,
+      rgba(16, 16, 24, 0.16) 100%
+    ),
+    url("/home/eugene/.cache/waybar-weather/dashboard-weather.png");
+  background-position: center;
+  background-repeat: no-repeat;
+  color: var(--text-color);
+}
+
+.widget-label.weather > label {
+  color: var(--text-color);
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -1px;
+  text-shadow: 0 1px 3px rgba(5, 5, 10, 0.92);
+}
+
+.widget-label.weather-details {
+  margin: 0 12px 8px;
+  padding: 3px 15px 11px;
+  border: 1px solid rgba(137, 180, 250, 0.22);
+  border-top: none;
+  border-radius: 0 0 13px 13px;
+  background: rgba(16, 16, 24, 0.84);
+  color: var(--text-secondary);
+}
+
+.widget-label.weather-details > label {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* Shared widget surfaces */
+.widget-dnd,
+.widget-volume,
+.widget-backlight {
+  padding: 9px 12px;
+  border: 1px solid var(--surface-border);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text-color);
+  box-shadow: none;
+}
+
+/* Do-not-disturb */
+.widget-dnd {
+  min-height: 36px;
+  margin: 5px 12px 8px;
+}
+
+.widget-dnd > label {
+  margin-right: 10px;
+  color: var(--text-color);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.widget-dnd > switch {
+  min-width: 44px;
+  min-height: 24px;
+  margin-left: 10px;
+  border: 1px solid rgba(205, 198, 226, 0.12);
+  border-radius: 999px;
+  background: var(--surface-raised);
+  box-shadow: none;
+}
+
+.widget-dnd > switch:hover {
+  border-color: rgba(203, 166, 247, 0.36);
+  background: var(--surface-hover);
+}
+
+.widget-dnd > switch:checked {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.widget-dnd > switch slider {
+  min-width: 18px;
+  min-height: 18px;
+  border-radius: 999px;
+  background: var(--text-color);
+  box-shadow: none;
+}
+
+.widget-dnd > switch:checked slider {
+  background: rgb(21, 21, 31);
+}
+
+/* Quick settings */
+.widget-buttons-grid {
+  margin: 3px 10px 7px;
+  padding: 0;
+  background: transparent;
+}
+
+.widget-buttons-grid flowboxchild > button {
+  min-height: 44px;
+  margin: 4px;
+  padding: 0 14px;
+  border: 1px solid var(--surface-border);
+  border-radius: 10px;
+  background: var(--surface-raised);
+  color: var(--text-color);
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: none;
+  transition: var(--hover-transition);
+}
+
+.widget-buttons-grid flowboxchild > button:hover {
+  border-color: rgba(203, 166, 247, 0.34);
+  background: var(--surface-hover);
+}
+
+.widget-buttons-grid flowboxchild > button:active {
+  background: rgba(203, 166, 247, 0.24);
+}
+
+.widget-buttons-grid flowboxchild > button.toggle:checked,
+.widget-buttons-grid flowboxchild > button.toggle.active {
+  border-color: rgba(203, 166, 247, 0.42);
+  background: rgba(203, 166, 247, 0.18);
+  color: var(--accent);
+  box-shadow: none;
+}
+
+/* Media */
+.widget-mpris {
+  margin: 0 12px 7px;
+  padding: 0;
+  border: 1px solid var(--surface-border);
+  border-radius: 12px;
+  background: rgba(28, 28, 42, 0.94);
+  overflow: hidden;
+}
+
+.widget-mpris .widget-mpris-player {
+  margin: 0;
+  border-radius: 12px;
+  background: transparent;
+  box-shadow: none;
+}
+
+.widget-mpris .widget-mpris-player .mpris-background {
+  opacity: 0;
+  filter: none;
+}
+
+.widget-mpris .widget-mpris-player .mpris-overlay {
+  min-height: 72px;
+  padding: 10px 12px;
+  background: transparent;
+}
+
+.widget-mpris .widget-mpris-player .mpris-overlay .widget-mpris-album-art {
+  -gtk-icon-size: 54px;
+  border-radius: 9px;
+  box-shadow: none;
+}
+
+.widget-mpris .widget-mpris-player .mpris-overlay .widget-mpris-title {
+  color: var(--text-color);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.widget-mpris .widget-mpris-player .mpris-overlay .widget-mpris-subtitle {
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
+.widget-mpris .widget-mpris-player .mpris-overlay button {
+  min-width: 28px;
+  min-height: 28px;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-color);
+}
+
+.widget-mpris .widget-mpris-player .mpris-overlay button:hover {
+  background: rgba(203, 166, 247, 0.14);
+}
+
+.widget-mpris > box > button {
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: transparent;
+  font-size: 0;
+  opacity: 0;
+}
+
+.widget-mpris carouselindicatordots {
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+}
+
+/* Volume and brightness */
+.widget-volume,
+.widget-backlight {
+  min-height: 36px;
+}
+
+.widget-volume {
+  margin: 7px 12px 0;
+  padding-bottom: 8px;
+  border-bottom: none;
+  border-radius: 12px 12px 0 0;
+}
+
+.widget-backlight {
+  margin: 0 12px 7px;
+  padding-top: 8px;
+  border-top-color: rgba(205, 198, 226, 0.07);
+  border-radius: 0 0 12px 12px;
+}
+
+.widget-volume label,
+.widget-backlight label {
+  min-width: 80px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.widget-volume trough,
+.widget-backlight trough {
+  min-height: 7px;
+  border-radius: 999px;
+  background: rgba(59, 61, 85, 0.92);
+}
+
+.widget-volume highlight,
+.widget-backlight highlight {
+  min-height: 7px;
+  border-radius: 999px;
+  background: var(--accent);
+}
+
+.widget-volume slider,
+.widget-backlight slider {
+  min-width: 17px;
+  min-height: 17px;
+  border: 2px solid var(--accent);
+  border-radius: 999px;
+  background: var(--text-color);
+  box-shadow: none;
+}
+
+/* Notification section heading */
+.widget-title {
+  margin: 8px 12px 2px;
+  padding: 4px 2px 5px;
+  color: var(--text-color);
+}
+
+.widget-title > label {
+  margin-right: 8px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.widget-title > button {
+  min-height: 30px;
+  margin-left: 8px;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.widget-title > button:hover {
+  border-color: rgba(243, 139, 168, 0.34);
+  background: rgba(243, 139, 168, 0.14);
+  color: var(--danger);
+}
+
+.widget-title > button:disabled {
+  background: rgba(42, 42, 61, 0.38);
+  color: var(--text-color-disabled);
+  opacity: 0.64;
+}
+
+/* Notification cards */
+.notification-row {
+  background: transparent;
+}
+
+.notification-row:focus {
+  background: transparent;
+}
+
+.notification-row:focus .notification {
+  border-color: rgba(203, 166, 247, 0.72);
+  box-shadow: none;
+}
+
+.notification-row .notification-background {
+  padding: 3px 2px;
+}
+
+.notification-row .notification-background .notification {
+  padding: 0;
+  border: 1px solid rgba(205, 198, 226, 0.09);
+  border-radius: 10px;
+  background: rgba(30, 30, 46, 0.82);
+  box-shadow: none;
+}
+
+.notification-row .notification-background .notification:hover {
+  border-color: rgba(203, 166, 247, 0.24);
+  background: rgba(42, 42, 61, 0.92);
+}
+
+.notification-row .notification-background .notification.critical {
+  border-color: rgba(243, 139, 168, 0.34);
+  border-left: 2px solid var(--danger);
+  background: rgba(38, 28, 40, 0.92);
+  box-shadow: none;
+}
+
+.notification-row .notification-background .notification .notification-default-action {
+  margin: 0;
+  padding: 9px 10px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-color);
+  box-shadow: none;
+}
+
+.notification-row .notification-background .notification .notification-default-action:hover {
+  background: rgba(59, 61, 85, 0.28);
+}
+
+.notification-row .notification-background .notification .notification-default-action:not(:only-child) {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.notification-row .notification-background .notification .notification-content {
+  padding: 0;
+  border-radius: 9px;
+  background: transparent;
+}
+
+.notification-row .notification-background .notification .image {
+  margin: 1px 10px 1px 0;
+  padding: 4px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(59, 61, 85, 0.34);
+  -gtk-icon-filter: none;
+  -gtk-icon-size: var(--notification-icon-size);
+}
+
+.notification-row .notification-background .notification .app-icon {
+  margin: 5px;
+  -gtk-icon-filter: none;
+  -gtk-icon-size: var(--notification-app-icon-size);
+  -gtk-icon-shadow: 0 2px 5px rgba(5, 5, 10, 0.62);
+}
+
+.notification-row .notification-background .notification .app-name {
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.notification-row .notification-background .notification .text-box label {
+  filter: none;
+}
+
+.notification-row .notification-background .notification .summary {
+  color: var(--text-color);
+  font-size: var(--font-size-summary);
+  font-weight: 700;
+  letter-spacing: 0;
+  text-shadow: none;
+}
+
+.notification-row .notification-background .notification .time {
+  margin-right: 26px;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 500;
+  text-shadow: none;
+}
+
+.notification-row .notification-background .notification .body {
+  margin-top: 2px;
+  color: var(--text-secondary);
+  font-size: var(--font-size-body);
+  font-weight: 400;
+  line-height: 1.35;
+  text-shadow: none;
+}
+
+.notification-row .notification-background .close-button,
+.notification-group .notification-group-close-button .close-button {
+  min-width: 24px;
+  min-height: 24px;
+  margin: 7px 7px 0 0;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  box-shadow: none;
+}
+
+.notification-row .notification-background .close-button:hover,
+.notification-group .notification-group-close-button .close-button:hover {
+  background: rgba(243, 139, 168, 0.16);
+  color: var(--danger);
+}
+
+.notification-row .notification-background .notification .notification-alt-actions {
+  padding: 4px;
+  border-top: 1px solid var(--surface-border);
+  border-bottom-left-radius: 14px;
+  border-bottom-right-radius: 14px;
+  background: rgba(16, 16, 24, 0.42);
+}
+
+.notification-row .notification-background .notification .notification-action {
+  margin: 3px;
+  padding: 0;
+}
+
+.notification-row .notification-background .notification .notification-action > button {
+  min-height: 34px;
+  border-radius: 9px;
+  background: var(--surface-raised);
+  color: var(--text-color);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.notification-row .notification-background .notification .notification-action > button:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.notification-row .notification-background .notification .inline-reply-entry {
+  min-height: 34px;
+  border: 1px solid var(--surface-border);
+  border-radius: 9px;
+  background: var(--noti-bg-darker);
+  color: var(--text-color);
+  caret-color: var(--text-color);
+}
+
+.notification-row .notification-background .notification .inline-reply-button {
+  min-height: 34px;
+  margin-left: 5px;
+  border: 1px solid var(--noti-border-color);
+  border-radius: 9px;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* Grouped notifications */
+.notification-group {
+  transition: none;
+}
+
+.notification-group:focus {
+  background: transparent;
+}
+
+.notification-group .notification-group-buttons,
+.notification-group .notification-group-headers {
+  margin: 2px 4px;
+  padding: 3px 5px;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.notification-group .notification-group-headers .notification-group-icon {
+  -gtk-icon-size: 20px;
+  color: var(--accent);
+}
+
+.notification-group .notification-group-headers .notification-group-header {
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.notification-group.collapsed.not-expanded {
+  opacity: 0.88;
+}
+
+.notification-group.collapsed .notification-row .notification {
+  background: rgba(var(--noti-bg), 1);
+}
+
+.floating-notifications .notification-row .notification-background {
+  padding: 6px;
+}
+
+.floating-notifications .notification-row .notification-background .notification {
+  border: 1px solid rgba(205, 198, 226, 0.12);
+  border-radius: 11px;
+  background: rgba(21, 21, 31, 0.99);
+  box-shadow: none;
+}
+
+.floating-notifications .notification-row .notification-background .notification.low {
+  border-color: rgba(205, 198, 226, 0.08);
+}
+
+.floating-notifications .notification-row .notification-background .notification.critical {
+  border-color: rgba(243, 139, 168, 0.34);
+  border-left: 2px solid var(--danger);
+  background: rgba(38, 28, 40, 0.96);
+}
+
+.floating-notifications .notification-row .notification-background .notification .notification-default-action {
+  padding: 10px;
+}
+
+.floating-notifications .notification-row .notification-background .notification .image {
+  margin-right: 12px;
+}
+
+.floating-notifications .notification-row .notification-background .close-button {
+  margin-top: 9px;
+  margin-right: 9px;
+}

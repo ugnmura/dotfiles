@@ -1,0 +1,43 @@
+#!/bin/sh
+
+set -eu
+
+expected_profile_sha=30511bd767cd8df4c923fb694232b6735008f2974fc579e04366c651d21617ae
+actual_profile_sha=$(sha256sum /etc/profile | awk '{print $1}')
+
+if [ "$actual_profile_sha" != "$expected_profile_sha" ]; then
+    printf 'Refusing to replace /etc/profile because it changed after inspection.\n' >&2
+    exit 1
+fi
+
+xbps-install -Sy \
+    sway \
+    swaylock \
+    fuzzel \
+    SwayNotificationCenter \
+    SwayOSD \
+    papirus-icon-theme
+
+if [ ! -e /etc/profile.pre-sway-20260830 ]; then
+    install -o root -g root -m 0644 /etc/profile /etc/profile.pre-sway-20260830
+fi
+install -o root -g root -m 0644 \
+    /home/eugene/.config/sway/profile.corrected /etc/profile
+
+install -o root -g root -m 0644 \
+    /home/eugene/.config/sway/sway-managed.desktop \
+    /usr/share/wayland-sessions/sway-managed.desktop
+
+if [ ! -e /var/lib/sddm/state.conf.pre-sway-20260830 ]; then
+    install -o root -g root -m 0644 \
+        /var/lib/sddm/state.conf /var/lib/sddm/state.conf.pre-sway-20260830
+fi
+install -o root -g root -m 0644 \
+    /home/eugene/.config/sway/sddm-state.conf /var/lib/sddm/state.conf
+
+install -d -o root -g root -m 0755 /etc/elogind/logind.conf.d
+install -o root -g root -m 0644 \
+    /home/eugene/.config/sway/system/10-lid.conf \
+    /etc/elogind/logind.conf.d/10-lid.conf
+
+printf 'Sway packages and managed SDDM session installed.\n'

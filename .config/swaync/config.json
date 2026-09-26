@@ -1,0 +1,99 @@
+{
+  "$schema": "/etc/xdg/swaync/configSchema.json",
+  "ignore-gtk-theme": true,
+  "positionX": "right",
+  "positionY": "top",
+  "layer": "overlay",
+  "control-center-layer": "top",
+  "layer-shell": true,
+  "layer-shell-cover-screen": true,
+  "cssPriority": "user",
+  "control-center-margin-top": 12,
+  "control-center-margin-bottom": 12,
+  "control-center-margin-right": 14,
+  "control-center-margin-left": 14,
+  "notification-2fa-action": true,
+  "notification-inline-replies": true,
+  "notification-body-image-height": 100,
+  "notification-body-image-width": 200,
+  "timeout": 7,
+  "timeout-low": 4,
+  "timeout-critical": 0,
+  "fit-to-screen": true,
+  "relative-timestamps": true,
+  "control-center-width": 500,
+  "control-center-height": 720,
+  "notification-window-width": 420,
+  "keyboard-shortcuts": true,
+  "notification-grouping": true,
+  "image-visibility": "when-available",
+  "transition-time": 0,
+  "hide-on-clear": false,
+  "hide-on-action": true,
+  "text-empty": "You're all caught up",
+  "script-fail-notify": true,
+  "widgets": [
+    "label#weather",
+    "label#weather-details",
+    "mpris",
+    "buttons-grid",
+    "volume",
+    "backlight",
+    "dnd",
+    "title",
+    "notifications"
+  ],
+  "widget-config": {
+    "notifications": {
+      "vexpand": true
+    },
+    "label#weather": {
+      "text": "󰖐  21°",
+      "max-lines": 1
+    },
+    "label#weather-details": {
+      "text": "Overcast \nUnterrath, Germany  ·  Feels 20°  ·  17–23°  ·  Rain 53%",
+      "max-lines": 2
+    },
+    "title": {
+      "text": "Notifications",
+      "clear-all-button": true,
+      "button-text": "Clear all"
+    },
+    "buttons-grid": {
+      "buttons-per-row": 2,
+      "actions": [
+        {
+          "label": "󰖩  Wi-Fi",
+          "type": "normal",
+          "command": "systemsettings kcm_networkmanagement"
+        },
+        {
+          "label": "󰂯  Bluetooth",
+          "type": "toggle",
+          "active": false,
+          "command": "/home/eugene/.config/sway/scripts/toggle-bluetooth toggle",
+          "update-command": "/home/eugene/.config/sway/scripts/toggle-bluetooth status"
+        }
+      ]
+    },
+    "dnd": {
+      "text": "󰂛  Do Not Disturb"
+    },
+    "mpris": {
+      "blacklist": [],
+      "autohide": true,
+      "show-album-art": "when-available",
+      "loop-carousel": false
+    },
+    "volume": {
+      "label": "󰕾  Volume",
+      "show-per-app": false
+    },
+    "backlight": {
+      "label": "󰃠  Brightness",
+      "device": "amdgpu_bl0",
+      "subsystem": "backlight"
+    }
+  }
+}

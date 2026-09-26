@@ -1,0 +1,61 @@
+#!/bin/sh
+
+state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/sway"
+log_file="$state_dir/session.log"
+mkdir -p "$state_dir"
+umask 077
+: >"$log_file"
+
+# Keep the compositor on the AMD GPU that physically drives both displays.
+# wlroots uses ':' as a device-list separator, so the resolver returns only a
+# colon-free /dev/dri/cardN primary node. A failed resolution uses auto-probe.
+if drm_device=$(/home/eugene/.config/sway/scripts/resolve-drm-device 2>>"$log_file"); then
+    export WLR_DRM_DEVICES="$drm_device"
+    printf '[PREFLIGHT] PASS drm_device=%s\n' "$drm_device" >>"$log_file"
+else
+    unset WLR_DRM_DEVICES
+    printf '[PREFLIGHT] WARN drm_device=auto-probe\n' >>"$log_file"
+fi
+
+export XDG_CURRENT_DESKTOP=sway
+export XDG_SESSION_DESKTOP=sway
+export XDG_SESSION_TYPE=wayland
+
+export XCURSOR_THEME=Dracula-cursors
+export XCURSOR_SIZE=24
+export GTK_THEME=Dracula
+export GDK_BACKEND=wayland,x11
+export QT_QPA_PLATFORM='wayland;xcb'
+export QT_QPA_PLATFORMTHEME=qt5ct
+export SDL_VIDEODRIVER=wayland
+export CLUTTER_BACKEND=wayland
+
+export XMODIFIERS=@im=fcitx
+export QT_IM_MODULE=fcitx
+export GTK_IM_MODULE=fcitx
+
+[ -n "$DBUS_SESSION_BUS_ADDRESS" ] || {
+    printf '[PREFLIGHT] FAIL session_bus=unset\n' >>"$log_file"
+    exit 78
+}
+
+[ -n "$XDG_RUNTIME_DIR" ] && [ -d "$XDG_RUNTIME_DIR" ] && [ -w "$XDG_RUNTIME_DIR" ] || {
+    printf '[PREFLIGHT] FAIL runtime_dir=%s\n' "${XDG_RUNTIME_DIR:-unset}" >>"$log_file"
+    exit 78
+}
+
+if ! /usr/bin/sway --validate --config /home/eugene/.config/sway/config >>"$log_file" 2>&1; then
+    printf '[PREFLIGHT] FAIL sway_config=invalid\n' >>"$log_file"
+    exit 78
+fi
+printf '[PREFLIGHT] PASS session_bus=set runtime_dir=%s sway_config=valid\n' \
+    "$XDG_RUNTIME_DIR" >>"$log_file"
+
+printf '[SWAY-START] time=%s desktop=%s session_type=%s drm_device=%s\n' \
+    "$(date -Is)" "$XDG_CURRENT_DESKTOP" "$XDG_SESSION_TYPE" "${WLR_DRM_DEVICES:-auto}" \
+    >>"$log_file"
+
+/usr/bin/sway >>"$log_file" 2>&1
+rc=$?
+printf '[SWAY-EXIT] code=%s time=%s\n' "$rc" "$(date -Is)" >>"$log_file"
+exit "$rc"

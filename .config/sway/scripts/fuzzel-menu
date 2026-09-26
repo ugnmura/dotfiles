@@ -1,0 +1,18 @@
+#!/bin/sh
+
+# Fuzzel is single-instance across launcher and dmenu modes. Replace any other
+# chooser before starting this foreground menu, preserving stdin/stdout for callers.
+for fuzzel_pid in $(pgrep -u "$(id -u)" -x fuzzel 2>/dev/null || true); do
+    kill "$fuzzel_pid" 2>/dev/null || true
+done
+
+for _attempt in 1 2 3 4 5; do
+    pgrep -u "$(id -u)" -x fuzzel >/dev/null 2>&1 || break
+    sleep 0.01
+done
+
+for fuzzel_pid in $(pgrep -u "$(id -u)" -x fuzzel 2>/dev/null || true); do
+    kill -KILL "$fuzzel_pid" 2>/dev/null || true
+done
+
+exec fuzzel --log-level=error --log-no-syslog "$@"

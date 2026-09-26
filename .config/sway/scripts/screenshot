@@ -1,0 +1,25 @@
+#!/bin/sh
+
+mode=${1:-region}
+
+case "$mode" in
+    output)
+        grim - | swappy -f -
+        ;;
+    region)
+        geometry=$(slurp) || exit 0
+        [ -n "$geometry" ] || exit 0
+        grim -g "$geometry" - | swappy -f -
+        ;;
+    window)
+        geometry=$(swaymsg -t get_tree --raw | jq -r '
+            .. | objects | select(.focused? == true) | .rect |
+            "\(.x),\(.y) \(.width)x\(.height)"' | head -n 1)
+        [ -n "$geometry" ] || exit 1
+        grim -g "$geometry" - | swappy -f -
+        ;;
+    *)
+        printf 'usage: %s {output|region|window}\n' "$0" >&2
+        exit 2
+        ;;
+esac

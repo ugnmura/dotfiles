@@ -1,0 +1,48 @@
+[menu]
+executable = '/home/eugene/.config/sway/scripts/fuzzel-menu'
+args = [
+  '--dmenu',
+  '--prompt={prompt}  ',
+  '--placeholder=Type to filter',
+  '--width=76',
+  '--lines=14',
+  '--match-mode=fzf',
+  '--auto-select',
+  '--no-run-if-empty',
+]
+
+[format]
+output_format = 'Output {name}'
+workspace_format = 'Workspace {name}  ·  {layout}'
+container_format = 'Container {layout}  ·  workspace {workspace_name}'
+window_format = "{app_name} — {title}  ·  workspace {workspace_name}\u0000icon\u001f{app_icon}"
+indent = '  '
+urgency_start = '! '
+urgency_end = ''
+html_escape = false
+icon_dirs = [
+  '/usr/share/icons/Papirus-Dark/48x48/apps',
+  '/usr/share/icons/Papirus/48x48/apps',
+  '/usr/share/icons/hicolor/48x48/apps',
+  '/usr/share/pixmaps',
+]
+
+[layout]
+auto_tile = true
+auto_tile_min_window_width_per_output_width = [
+  [931, 440],
+  [1280, 600],
+  [1366, 650],
+  [1920, 920],
+  [3840, 1840],
+]
+
+[focus]
+lockin_delay = 200
+
+[misc]
+auto_nop_delay = 600
+seq_inhibit = true
+
+[swaymsg_commands]
+include_predefined = true

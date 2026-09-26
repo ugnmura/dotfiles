@@ -1,0 +1,17 @@
+#!/bin/sh
+
+outputs_json=$(swaymsg -t get_outputs --raw 2>/dev/null)
+
+focused_output=$(printf '%s\n' "$outputs_json" \
+    | jq -r '.[] | select(.active and .focused) | .name' \
+    | head -n 1)
+
+if ! command -v qs >/dev/null 2>&1; then
+    if command -v notify-send >/dev/null 2>&1; then
+        notify-send -u critical "Power menu unavailable" "Quickshell is not installed"
+    fi
+    exit 1
+fi
+
+export POWER_MENU_OUTPUT="$focused_output"
+exec qs --no-duplicate --daemonize --config power-menu

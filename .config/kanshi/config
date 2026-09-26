@@ -1,0 +1,2 @@
+# Profiles are separate so the display GUI can update one topology atomically.
+include /home/eugene/.config/kanshi/profiles/*.conf

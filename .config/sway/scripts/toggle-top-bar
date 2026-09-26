@@ -1,0 +1,8 @@
+#!/bin/sh
+
+pid_file="${XDG_RUNTIME_DIR:-/tmp}/sway-session-services/waybar.pid"
+[ -r "$pid_file" ] || exit 1
+
+read -r bar_pid <"$pid_file"
+kill -0 "$bar_pid" 2>/dev/null || exit 1
+kill -USR1 "$bar_pid"

@@ -1,0 +1,46 @@
+#!/bin/sh
+
+set -u
+
+case "${1:-}" in
+    next) step=1; action=focus ;;
+    prev) step=-1; action=focus ;;
+    move-next) step=1; action=move ;;
+    move-prev) step=-1; action=move ;;
+    *) exit 64 ;;
+esac
+
+workspaces=$(swaymsg -t get_workspaces --raw 2>/dev/null) || exit 1
+current_num=$(printf '%s\n' "$workspaces" | jq -r '.[] | select(.focused) | .num')
+current_output=$(printf '%s\n' "$workspaces" | jq -r '.[] | select(.focused) | .output')
+
+case "$current_num" in
+    ''|*[!0-9]*) exit 1 ;;
+esac
+
+[ "$current_num" -ge 1 ] && [ "$current_num" -le 10 ] || exit 1
+
+for distance in 1 2 3 4 5 6 7 8 9 10; do
+    candidate=$(( (current_num - 1 + step * distance + 100) % 10 + 1 ))
+    owner=$(printf '%s\n' "$workspaces" \
+        | jq -r --argjson number "$candidate" \
+            '.[] | select(.num == $number) | .output' \
+        | sed -n '1p')
+
+    # Preserve the two explicit output homes in the main Sway configuration.
+    if { [ "$candidate" -eq 1 ] && [ "$current_output" != 'eDP-1' ]; } \
+        || { [ "$candidate" -eq 5 ] && [ "$current_output" != 'HDMI-A-1' ]; }; then
+        continue
+    fi
+
+    # Existing local workspaces are selected; unused numbers are created on
+    # the focused output. Numbers currently owned by the other output are skipped.
+    if [ -z "$owner" ] || [ "$owner" = "$current_output" ]; then
+        if [ "$action" = move ]; then
+            swaymsg "move container to workspace number $candidate" >/dev/null || exit 1
+        fi
+        exec swaymsg "workspace number $candidate"
+    fi
+done
+
+exit 1

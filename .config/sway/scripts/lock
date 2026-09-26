@@ -1,0 +1,7 @@
+#!/bin/sh
+
+if pidof swaylock >/dev/null 2>&1; then
+    exit 0
+fi
+
+exec swaylock --config /home/eugene/.config/swaylock/config

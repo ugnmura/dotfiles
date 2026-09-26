@@ -1,0 +1,380 @@
+#!/usr/bin/env bash
+
+set -u
+umask 077
+
+config_home="${XDG_CONFIG_HOME:-$HOME/.config}"
+cache_home="${XDG_CACHE_HOME:-$HOME/.cache}"
+config_file="$config_home/waybar/weather.conf"
+cache_dir="$cache_home/waybar-weather"
+weather_cache="$cache_dir/current.json"
+wallpaper_cache="$cache_dir/wallpaper.png"
+wallpaper_fingerprint="$cache_dir/wallpaper.state"
+cache_seconds=900
+
+WEATHER_LOCATION=""
+WEATHER_DYNAMIC_WALLPAPER=1
+WEATHER_BASE_WALLPAPER="$HOME/.wallpaper/wallpaper.png"
+
+if [[ -r "$config_file" ]]; then
+    # shellcheck disable=SC1090
+    source "$config_file"
+fi
+
+mkdir -p "$cache_dir"
+
+encoded_location=""
+if [[ -n "${WEATHER_LOCATION:-}" ]]; then
+    encoded_location="$(jq -rn --arg value "$WEATHER_LOCATION" '$value | @uri')"
+fi
+
+weather_endpoint="https://wttr.in"
+if [[ -n "$encoded_location" ]]; then
+    weather_endpoint+="/$encoded_location"
+else
+    weather_endpoint+="/"
+fi
+weather_url="${weather_endpoint}?format=j1"
+
+cache_is_fresh() {
+    local now modified
+
+    [[ -s "$weather_cache" ]] || return 1
+    now="$(date +%s)"
+    modified="$(stat -c %Y "$weather_cache" 2>/dev/null || printf '0')"
+    (( now - modified < cache_seconds ))
+}
+
+fetch_weather() {
+    local temporary
+
+    temporary="$(mktemp "$cache_dir/weather.XXXXXX.json")" || return 1
+    if curl -fsSL --compressed \
+        --user-agent 'waybar-weather/1.0' \
+        --connect-timeout 4 \
+        --max-time 12 \
+        "$weather_url" \
+        --output "$temporary" \
+        && jq -e '.current_condition[0] and .weather[0]' "$temporary" >/dev/null 2>&1; then
+        mv -f "$temporary" "$weather_cache"
+        return 0
+    fi
+
+    rm -f "$temporary"
+    return 1
+}
+
+ensure_weather() {
+    cache_is_fresh && return 0
+    fetch_weather && return 0
+    [[ -s "$weather_cache" ]]
+}
+
+condition_kind() {
+    case "$1" in
+        113) printf 'clear\n' ;;
+        116) printf 'partly-cloudy\n' ;;
+        119|122) printf 'cloudy\n' ;;
+        143|248|260) printf 'fog\n' ;;
+        176|263|266|281|284|293|296|299|302|305|308|311|314|317|350|353|356|359)
+            printf 'rain\n'
+            ;;
+        179|182|185|227|230|323|326|329|332|335|338|362|365|368|371)
+            printf 'snow\n'
+            ;;
+        200|386|389|392|395) printf 'thunder\n' ;;
+        *) printf 'partly-cloudy\n' ;;
+    esac
+}
+
+condition_icon() {
+    local kind="$1"
+    local phase="$2"
+
+    case "$kind" in
+        clear)
+            if [[ "$phase" == 'night' ]]; then printf '󰖔\n'; else printf '󰖙\n'; fi
+            ;;
+        partly-cloudy) printf '󰖕\n' ;;
+        cloudy) printf '󰖐\n' ;;
+        fog) printf '󰖑\n' ;;
+        rain) printf '󰖗\n' ;;
+        snow) printf '󰖘\n' ;;
+        thunder) printf '󰖓\n' ;;
+        *) printf '󰖕\n' ;;
+    esac
+}
+
+day_phase() {
+    local hour
+
+    hour="$(date +%H)"
+    if (( 10#$hour >= 7 && 10#$hour < 20 )); then
+        printf 'day\n'
+    else
+        printf 'night\n'
+    fi
+}
+
+render_wallpaper() {
+    local kind="$1"
+    local phase="$2"
+    local temperature="$3"
+    local temperature_band='mild'
+    local fingerprint temporary
+    local -a effects
+
+    [[ "${WEATHER_DYNAMIC_WALLPAPER:-1}" == '1' ]] || return 0
+    [[ -r "$WEATHER_BASE_WALLPAPER" ]] || return 0
+    command -v magick >/dev/null 2>&1 || return 0
+    [[ -n "${SWAYSOCK:-}" ]] || return 0
+
+    if [[ "$temperature" =~ ^-?[0-9]+$ ]]; then
+        if (( temperature <= 5 )); then
+            temperature_band='cold'
+        elif (( temperature >= 27 )); then
+            temperature_band='hot'
+        fi
+    fi
+
+    fingerprint="${kind}:${phase}:${temperature_band}"
+    if [[ -s "$wallpaper_cache" && -s "$wallpaper_fingerprint" \
+        && "$(<"$wallpaper_fingerprint")" == "$fingerprint" \
+        && "$wallpaper_cache" -nt "$WEATHER_BASE_WALLPAPER" ]]; then
+        swaymsg output '*' bg "$wallpaper_cache" fill >/dev/null 2>&1 || true
+        return 0
+    fi
+
+    effects=()
+    case "$kind" in
+        clear) effects+=( -modulate '103,102,100' -fill '#f9e2af' -colorize '3%' ) ;;
+        partly-cloudy) effects+=( -modulate '97,92,100' -fill '#89b4fa' -colorize '3%' ) ;;
+        cloudy) effects+=( -modulate '93,86,100' -fill '#7f849c' -colorize '6%' ) ;;
+        fog) effects+=( -modulate '101,68,100' -fill '#cdd6f4' -colorize '11%' ) ;;
+        rain) effects+=( -modulate '91,82,100' -fill '#89b4fa' -colorize '7%' ) ;;
+        snow) effects+=( -modulate '105,78,100' -fill '#cdd6f4' -colorize '8%' ) ;;
+        thunder) effects+=( -modulate '82,88,100' -fill '#cba6f7' -colorize '7%' ) ;;
+    esac
+
+    case "$temperature_band" in
+        cold) effects+=( -fill '#89b4fa' -colorize '2%' ) ;;
+        hot) effects+=( -fill '#f9e2af' -colorize '2%' ) ;;
+    esac
+
+    if [[ "$phase" == 'night' ]]; then
+        effects+=( -modulate '86,92,100' -fill '#15151f' -colorize '8%' )
+    fi
+
+    temporary="$(mktemp --suffix=.png "$cache_dir/wallpaper.XXXXXX")" || return 0
+    if magick "$WEATHER_BASE_WALLPAPER" \
+        -auto-orient \
+        -resize '1920x1080^' \
+        -gravity center \
+        -extent 1920x1080 \
+        "${effects[@]}" \
+        -strip \
+        "$temporary"; then
+        mv -f "$temporary" "$wallpaper_cache"
+        printf '%s\n' "$fingerprint" >"$wallpaper_fingerprint"
+        swaymsg output '*' bg "$wallpaper_cache" fill >/dev/null 2>&1 || true
+    else
+        rm -f "$temporary"
+    fi
+}
+
+update_dashboard_preview() {
+    local icon="$1"
+    local temperature="$2"
+    local description="$3"
+    local area="$4"
+    local country="$5"
+    local feels="$6"
+    local today_min="$7"
+    local today_max="$8"
+    local chance_rain="$9"
+    local kind="${10}"
+    local phase="${11}"
+    local swaync_config="$config_home/swaync/config.json"
+    local art_name art_source art_target art_state art_temporary
+    local temperature_preview details_preview
+    local current_temperature current_details temporary
+    local art_changed=0
+
+    [[ -r "$swaync_config" ]] || return 0
+    command -v flock >/dev/null 2>&1 || return 0
+
+    temperature_preview="${icon}  ${temperature}°"
+    details_preview="${description}"$'\n'"${area}${country:+, $country}  ·  Feels ${feels}°  ·  ${today_min}–${today_max}°  ·  Rain ${chance_rain}%"
+
+    exec 9>"$cache_dir/swaync-preview.lock" || return 0
+    flock -n 9 || return 0
+
+    case "$kind" in
+        clear)
+            if [[ "$phase" == 'night' ]]; then art_name='clear-night'; else art_name='clear-day'; fi
+            ;;
+        partly-cloudy) art_name='partly-cloudy' ;;
+        cloudy) art_name='cloudy' ;;
+        rain) art_name='rain' ;;
+        thunder) art_name='thunder' ;;
+        snow) art_name='snow' ;;
+        fog) art_name='fog' ;;
+        *) art_name='partly-cloudy' ;;
+    esac
+
+    art_source="$config_home/swaync/weather-art/${art_name}.png"
+    art_target="$cache_dir/dashboard-weather.png"
+    art_state="$cache_dir/dashboard-weather.state"
+
+    if [[ -r "$art_source" \
+        && ( ! -s "$art_target" || ! -s "$art_state" || "$(<"$art_state")" != "$art_name" ) ]]; then
+        art_temporary="$(mktemp --suffix=.png "$cache_dir/dashboard-weather.XXXXXX")"
+        if magick "$art_source" \
+            -resize '476x92^' \
+            -gravity center \
+            -extent 476x92 \
+            -strip \
+            "$art_temporary"; then
+            mv -f "$art_temporary" "$art_target"
+            printf '%s\n' "$art_name" >"$art_state"
+            art_changed=1
+        else
+            rm -f "$art_temporary"
+        fi
+    fi
+
+    current_temperature="$(jq -r '."widget-config"["label#weather"].text // ""' "$swaync_config" 2>/dev/null)"
+    current_details="$(jq -r '."widget-config"["label#weather-details"].text // ""' "$swaync_config" 2>/dev/null)"
+    if [[ "$current_temperature" == "$temperature_preview" && "$current_details" == "$details_preview" ]]; then
+        if (( art_changed )); then
+            swaync-client -rs >/dev/null 2>&1 || true
+        fi
+        flock -u 9
+        exec 9>&-
+        return 0
+    fi
+
+    temporary="$(mktemp "$config_home/swaync/config.json.XXXXXX")" || return 0
+    if jq \
+        --arg temperature "$temperature_preview" \
+        --arg details "$details_preview" \
+        '."widget-config"["label#weather"].text = $temperature
+         | ."widget-config"["label#weather-details"].text = $details' \
+        "$swaync_config" >"$temporary"; then
+        chmod --reference="$swaync_config" "$temporary"
+        mv -f "$temporary" "$swaync_config"
+        swaync-client -R >/dev/null 2>&1 || true
+    else
+        rm -f "$temporary"
+    fi
+
+    if (( art_changed )); then
+        swaync-client -rs >/dev/null 2>&1 || true
+    fi
+
+    flock -u 9
+    exec 9>&-
+}
+
+print_unavailable() {
+    jq -cn \
+        --arg text '󰖪 --°' \
+        --arg tooltip 'Weather unavailable\nRight-click to retry' \
+        '{text: $text, tooltip: $tooltip, class: "unavailable", alt: "Weather unavailable"}'
+}
+
+print_status() {
+    local -a values
+    local area country temperature feels code description humidity wind
+    local today_min today_max tomorrow_min tomorrow_max chance_rain
+    local kind phase icon tooltip
+
+    if ! ensure_weather; then
+        print_unavailable
+        return 0
+    fi
+
+    mapfile -t values < <(jq -r '[
+        (.nearest_area[0].areaName[0].value // "Local weather"),
+        (.nearest_area[0].country[0].value // ""),
+        (.current_condition[0].temp_C // "?"),
+        (.current_condition[0].FeelsLikeC // "?"),
+        (.current_condition[0].weatherCode // "0"),
+        (.current_condition[0].weatherDesc[0].value // "Unknown conditions"),
+        (.current_condition[0].humidity // "?"),
+        (.current_condition[0].windspeedKmph // "?"),
+        (.weather[0].mintempC // "?"),
+        (.weather[0].maxtempC // "?"),
+        (.weather[1].mintempC // .weather[0].mintempC // "?"),
+        (.weather[1].maxtempC // .weather[0].maxtempC // "?"),
+        ((([.weather[0].hourly[]?.chanceofrain | tonumber?] | max) // 0) | tostring)
+    ] | .[]' "$weather_cache")
+
+    area="${values[0]:-Local weather}"
+    country="${values[1]:-}"
+    temperature="${values[2]:-?}"
+    feels="${values[3]:-?}"
+    code="${values[4]:-0}"
+    description="${values[5]:-Unknown conditions}"
+    humidity="${values[6]:-?}"
+    wind="${values[7]:-?}"
+    today_min="${values[8]:-?}"
+    today_max="${values[9]:-?}"
+    tomorrow_min="${values[10]:-?}"
+    tomorrow_max="${values[11]:-?}"
+    chance_rain="${values[12]:-0}"
+
+    kind="$(condition_kind "$code")"
+    phase="$(day_phase)"
+    icon="$(condition_icon "$kind" "$phase")"
+    tooltip="${area}${country:+, $country}\n${description} · Feels like ${feels}°C\nHumidity ${humidity}% · Wind ${wind} km/h\nToday ${today_min}–${today_max}°C · Rain up to ${chance_rain}%\nTomorrow ${tomorrow_min}–${tomorrow_max}°C\n\nLeft-click: full forecast · Right-click: refresh"
+
+    update_dashboard_preview \
+        "$icon" "$temperature" "$description" "$area" "$country" \
+        "$feels" "$today_min" "$today_max" "$chance_rain" "$kind" "$phase"
+    render_wallpaper "$kind" "$phase" "$temperature"
+
+    jq -cn \
+        --arg text "$icon ${temperature}°" \
+        --arg tooltip "$tooltip" \
+        --arg class "$kind" \
+        --arg alt "$description" \
+        '{text: $text, tooltip: $tooltip, class: $class, alt: $alt}'
+}
+
+show_details() {
+    local title='Weather'
+
+    if ensure_weather; then
+        title="Weather — $(jq -r '.nearest_area[0].areaName[0].value // "Local"' "$weather_cache")"
+    fi
+
+    if command -v alacritty >/dev/null 2>&1; then
+        exec alacritty --class weather --title "$title" -e bash -c '
+            if ! curl -fsSL --compressed --max-time 20 "$1"; then
+                printf "Weather is temporarily unavailable.\n"
+            fi
+            printf "\nPress Enter to close..."
+            read -r
+        ' bash "${weather_endpoint}?F"
+    fi
+
+    exec xdg-open "$weather_endpoint"
+}
+
+case "${1:---status}" in
+    --status)
+        print_status
+        ;;
+    --refresh)
+        rm -f "$weather_cache" "$wallpaper_fingerprint"
+        print_status
+        ;;
+    --details)
+        show_details
+        ;;
+    *)
+        printf 'Usage: %s [--status|--refresh|--details]\n' "$0" >&2
+        exit 2
+        ;;
+esac

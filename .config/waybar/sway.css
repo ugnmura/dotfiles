@@ -1,0 +1,281 @@
+@define-color base #15151f;
+@define-color mantle #101018;
+@define-color surface #292a3d;
+@define-color surface_hi #3b3d55;
+@define-color overlay #7f849c;
+@define-color subtext #a6adc8;
+@define-color text #e8e8f2;
+@define-color accent #cba6f7;
+@define-color mauve #f5c2e7;
+@define-color blue #89b4fa;
+@define-color green #a6e3a1;
+@define-color yellow #f9e2af;
+@define-color red #f38ba8;
+
+@keyframes urgent-pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.58; }
+  100% { opacity: 1; }
+}
+
+* {
+  border: none;
+  border-radius: 0;
+  min-height: 0;
+  font-family: "Noto Sans", "Symbols Nerd Font Mono", sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+window#waybar {
+  background: alpha(@base, 0.84);
+  border: none;
+  border-radius: 14px;
+  box-shadow: none;
+  color: @text;
+}
+
+.modules-left,
+.modules-center,
+.modules-right {
+  min-height: 44px;
+  padding: 0 7px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+#custom-launcher,
+#custom-window-switcher,
+#mode,
+#window,
+#clock,
+#mpris,
+#custom-tray-toggle,
+#tray,
+#privacy,
+#idle_inhibitor,
+#custom-dashboard,
+#network,
+#bluetooth,
+#pulseaudio,
+#backlight,
+#battery,
+#custom-power {
+  min-height: 32px;
+  margin: 6px 0;
+  padding: 0 8px;
+  border-radius: 10px;
+  color: @text;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+#custom-launcher {
+  min-width: 20px;
+  color: @accent;
+  font-family: "Symbols Nerd Font Mono";
+  font-size: 18px;
+}
+
+#custom-window-switcher {
+  min-width: 20px;
+  color: @mauve;
+  font-family: "Symbols Nerd Font Mono";
+  font-size: 18px;
+}
+
+#custom-launcher:hover,
+#custom-window-switcher:hover,
+#custom-tray-toggle:hover,
+#privacy:hover,
+#idle_inhibitor:hover,
+#custom-dashboard:hover,
+#network:hover,
+#bluetooth:hover,
+#pulseaudio:hover,
+#backlight:hover,
+#battery:hover,
+#custom-power:hover,
+#clock:hover {
+  background: alpha(@surface_hi, 0.58);
+}
+
+#workspaces {
+  padding: 0 3px;
+}
+
+#workspaces button {
+  min-width: 32px;
+  min-height: 32px;
+  margin: 6px 2px;
+  padding: 0 8px;
+  border-radius: 10px;
+  background: transparent;
+  color: @overlay;
+  box-shadow: none;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+#workspaces button.visible {
+  color: @text;
+}
+
+#workspaces button.focused {
+  background-color: alpha(@accent, 0.22);
+  background-image: linear-gradient(to right, @accent, @accent);
+  background-repeat: no-repeat;
+  background-position: center bottom;
+  background-size: 70% 2px;
+  color: @accent;
+  box-shadow: none;
+}
+
+#workspaces button:hover {
+  background-color: alpha(@surface_hi, 0.58);
+  color: @text;
+}
+
+#workspaces button.urgent {
+  background: @red;
+  color: @base;
+  animation: urgent-pulse 1s ease-in-out infinite;
+}
+
+#mode {
+  color: @yellow;
+}
+
+#window {
+  color: @subtext;
+  font-weight: 500;
+  padding-left: 12px;
+}
+
+window#waybar.empty #window {
+  padding: 0;
+}
+
+#clock {
+  color: @text;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+#mpris {
+  color: @mauve;
+  font-weight: 500;
+}
+
+#mpris.paused {
+  color: @overlay;
+}
+
+#custom-tray-toggle {
+  min-width: 20px;
+  color: @overlay;
+}
+
+#tray {
+  padding-left: 4px;
+}
+
+#tray > widget > button.passive {
+  -gtk-icon-effect: dim;
+}
+
+#tray > widget > button.needs-attention {
+  -gtk-icon-effect: highlight;
+}
+
+#privacy {
+  color: @red;
+}
+
+#idle_inhibitor.activated {
+  color: @yellow;
+}
+
+#idle_inhibitor,
+#custom-dashboard,
+#network,
+#bluetooth,
+#custom-power {
+  min-width: 20px;
+}
+
+#custom-dashboard {
+  color: @blue;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+#custom-dashboard.notification,
+#custom-dashboard.dnd-notification,
+#custom-dashboard.inhibited-notification,
+#custom-dashboard.dnd-inhibited-notification {
+  background: alpha(@accent, 0.14);
+  color: @mauve;
+}
+
+#custom-dashboard.dnd-none,
+#custom-dashboard.inhibited-none,
+#custom-dashboard.dnd-inhibited-none {
+  color: @overlay;
+}
+
+#network {
+  color: @blue;
+  font-size: 14px;
+}
+
+#network.disconnected {
+  color: @red;
+}
+
+#bluetooth {
+  color: @blue;
+  font-size: 14px;
+}
+
+#pulseaudio {
+  color: @green;
+}
+
+#pulseaudio.muted {
+  color: @overlay;
+}
+
+#backlight {
+  color: @yellow;
+}
+
+#battery.charging,
+#battery.plugged {
+  color: @green;
+}
+
+#battery.warning:not(.charging) {
+  color: @yellow;
+}
+
+#battery.critical:not(.charging) {
+  color: @red;
+}
+
+#custom-power {
+  color: @red;
+  font-size: 16px;
+}
+
+tooltip {
+  padding: 8px 10px;
+  background: alpha(@mantle, 0.98);
+  border: none;
+  border-radius: 10px;
+  color: @text;
+}
+
+tooltip label {
+  color: @text;
+}

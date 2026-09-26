@@ -1,0 +1,11 @@
+#!/bin/sh
+
+set -eu
+
+xbps-install -y swayfx
+
+install -o root -g root -m 0644 \
+    /home/eugene/.config/sway/sway-managed.desktop \
+    /usr/share/wayland-sessions/sway-managed.desktop
+
+printf 'SwayFX installed and registered with SDDM.\n'

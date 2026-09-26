@@ -1,0 +1,8 @@
+#!/bin/sh
+
+selection=$(cliphist list | /home/eugene/.config/sway/scripts/fuzzel-menu --dmenu \
+    --prompt='Clipboard  ' \
+    --placeholder='Search copied text and images') || exit 0
+
+[ -n "$selection" ] || exit 0
+printf '%s' "$selection" | cliphist decode | wl-copy

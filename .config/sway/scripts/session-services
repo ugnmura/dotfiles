@@ -1,0 +1,147 @@
+#!/bin/bash
+
+# Keep desktop helpers scoped to this Sway session and stop them at logout.
+set -u
+
+runtime_dir="${XDG_RUNTIME_DIR:-/tmp}/sway-session-services"
+mkdir -p "$runtime_dir"
+
+# A config/session restart must not start a second copy of every helper. Scope
+# the lock to this Wayland display so separate graphical sessions can coexist.
+lock_scope="${WAYLAND_DISPLAY:-sway}"
+case "$lock_scope" in
+    *[!A-Za-z0-9_.-]*) lock_scope=sway ;;
+esac
+exec 9>"$runtime_dir/session-$lock_scope.lock"
+flock -n 9 || exit 0
+
+# The currently running supervisor may predate this guard. Detect it by both
+# command and compositor socket so the first guarded reload also stays unique.
+script_path=$(readlink -f "$0")
+while read -r existing_pid existing_command; do
+    [ "$existing_pid" != "$$" ] || continue
+    [ "$existing_command" = "/bin/bash $script_path" ] || continue
+    [ -r "/proc/$existing_pid/environ" ] || continue
+
+    if [ -n "${SWAYSOCK:-}" ]; then
+        tr '\0' '\n' <"/proc/$existing_pid/environ" \
+            | grep -Fxq "SWAYSOCK=$SWAYSOCK" && exit 0
+    elif [ -n "${WAYLAND_DISPLAY:-}" ]; then
+        tr '\0' '\n' <"/proc/$existing_pid/environ" \
+            | grep -Fxq "WAYLAND_DISPLAY=$WAYLAND_DISPLAY" && exit 0
+    fi
+done < <(ps -u "$(id -u)" -o pid=,args=)
+
+declare -a service_names=()
+declare -a service_pids=()
+subscription_pid=''
+
+start_service() {
+    local name="$1"
+    shift
+
+    setsid "$@" >"$runtime_dir/$name.log" 2>&1 &
+    service_names+=("$name")
+    service_pids+=("$!")
+    printf '%s\n' "$!" >"$runtime_dir/$name.pid"
+}
+
+stop_services() {
+    local signal="$1"
+    local index
+    local pid
+
+    # Stop dependents before providers so clients cannot reactivate helpers
+    # while the session is being torn down.
+    for ((index=${#service_pids[@]} - 1; index >= 0; index--)); do
+        pid="${service_pids[$index]}"
+        if kill -0 "$pid" 2>/dev/null; then
+            kill -s "$signal" -- "-$pid" 2>/dev/null || true
+        fi
+    done
+}
+
+cleanup() {
+    trap - EXIT HUP INT TERM
+    if [ -n "$subscription_pid" ]; then
+        kill "$subscription_pid" 2>/dev/null || true
+    fi
+    stop_services TERM
+    sleep 1
+    stop_services KILL
+}
+
+trap cleanup EXIT HUP INT TERM
+
+# Make the Sway environment available to D-Bus activated applications.
+dbus-update-activation-environment --all >/dev/null 2>&1 || true
+
+# Keep toolkit appearance aligned with the desktop palette.
+gsettings set org.gnome.desktop.interface color-scheme prefer-dark >/dev/null 2>&1 || true
+gsettings set org.gnome.desktop.interface gtk-theme Dracula >/dev/null 2>&1 || true
+gsettings set org.gnome.desktop.interface icon-theme Papirus-Dark >/dev/null 2>&1 || true
+gsettings set org.gnome.desktop.interface cursor-theme Dracula-cursors >/dev/null 2>&1 || true
+gsettings set org.gnome.desktop.interface cursor-size 24 >/dev/null 2>&1 || true
+
+brightnessctl set 100% >/dev/null 2>&1 || true
+
+# Avoid notification-daemon conflicts left by another compositor session.
+pkill -x dunst >/dev/null 2>&1 || true
+
+# PipeWire may already be running if the user switched sessions without rebooting.
+if ! pgrep -u "$(id -u)" -x pipewire >/dev/null 2>&1; then
+    start_service pipewire pipewire
+fi
+
+# SwayNC is intentionally D-Bus activated by Waybar's status client. Its
+# packaged activation entry loads ~/.config/swaync automatically and the
+# session-scoped bus owns its lifetime, avoiding two daemons racing for the
+# notification name.
+rm -f "$runtime_dir/swaync.pid"
+start_service waybar waybar --config /home/eugene/.config/waybar/sway.jsonc --style /home/eugene/.config/waybar/sway.css
+start_service swayosd swayosd-server
+start_service kanshi kanshi --config /home/eugene/.config/kanshi/config
+
+# swayrd logs a false error when its socket does not exist. Give it a harmless
+# placeholder that it removes before binding the real socket.
+swayr_socket="${XDG_RUNTIME_DIR:-/tmp}/swayr-${WAYLAND_DISPLAY:-wayland-0}.sock"
+if [ ! -e "$swayr_socket" ]; then
+    : >"$swayr_socket"
+    chmod 600 "$swayr_socket"
+fi
+start_service swayrd swayrd
+start_service udiskie udiskie --quiet --no-tray
+start_service fcitx5 fcitx5
+start_service polkit-agent /usr/libexec/polkit-gnome-authentication-agent-1
+# Locking, display power-off and suspend are intentionally manual-only.
+start_service clipboard-text wl-paste --type text --watch cliphist store
+start_service clipboard-image wl-paste --type image --watch cliphist store
+
+# Log early failures without taking down the whole desktop.
+sleep 1
+for index in "${!service_pids[@]}"; do
+    if ! kill -0 "${service_pids[$index]}" 2>/dev/null; then
+        printf '%s failed; see %s/%s.log\n' \
+            "${service_names[$index]}" "$runtime_dir" "${service_names[$index]}" >&2
+    fi
+done
+
+# Explain only the handful of controls needed to get started, once.
+state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/sway"
+welcome_marker="$state_dir/welcome-shown"
+if [ ! -e "$welcome_marker" ] && command -v notify-send >/dev/null 2>&1; then
+    mkdir -p "$state_dir"
+    notify-send \
+        --app-name='Sway' \
+        --icon=preferences-desktop \
+        --expire-time=15000 \
+        'Sway is ready' \
+        'Super+P opens apps. Super+W finds any window. Super+Tab returns to the last window. Super+F1 shows every shortcut.'
+    touch "$welcome_marker"
+fi
+
+# This exits when the Sway IPC socket closes, triggering cleanup above. Keep the
+# subscriber behind Bash's `wait` so TERM is handled immediately on a restart.
+swaymsg -t subscribe -m '["shutdown"]' >/dev/null 2>&1 &
+subscription_pid=$!
+wait "$subscription_pid"

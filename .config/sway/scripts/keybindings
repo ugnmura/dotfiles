@@ -1,0 +1,44 @@
+#!/bin/sh
+
+printf '%s\n' \
+    'Super + N / Enter        Open terminal' \
+    'Super + P                Open applications' \
+    'Super + D                Open unified dashboard' \
+    'Super + W                Find any open window' \
+    'Super + Tab              Return to last-used window' \
+    'Super + Shift + W        Find workspace or window' \
+    'Super + Ctrl + W         Bring a window to this workspace' \
+    'Super + Grave            Toggle quick terminal' \
+    'Super + V                Search clipboard history' \
+    'Super + Q                Close focused window' \
+    'Super + Space            Toggle floating window' \
+    'Super + M / F            Toggle fullscreen' \
+    'Super + H/J/K/L          Focus left/down/up/right' \
+    'Super + Arrow            Focus by direction' \
+    'Super + Shift + H/J/K/L  Move window by direction' \
+    'Super + Shift + Arrow    Move window by direction' \
+    'Super + R                Resize: H/Left wider, L/Right narrower' \
+    'Super + 1 ... 0          Switch workspace' \
+    'Super + Shift + 1 ... 0  Move window to workspace' \
+    'Super + O / I            Create/go next / previous workspace locally' \
+    'Super + Ctrl + O / I     Move + follow window next / previous locally' \
+    'Super + Shift + Tab      Return to last-used workspace' \
+    'Super + , / .            Focus left / right monitor' \
+    'Super + Shift + , / .    Move workspace between monitors' \
+    'Print                    Capture output' \
+    'Super + Shift + S        Capture region' \
+    'Super + Ctrl + S         Capture window' \
+    'Super + Ctrl + L         Lock screen' \
+    'Super + Escape           Session and power menu' \
+    'Super + Shift + B        Toggle top bar' \
+    'Super + Shift + C        Reload configuration' \
+    'Super + Shift + D        Configure and save displays' \
+    'Super + Shift + Q        Confirm logout' \
+    'Super + F1               Show this shortcut sheet' \
+  | /home/eugene/.config/sway/scripts/fuzzel-menu --dmenu \
+      --prompt='Shortcuts  ' \
+      --placeholder='Type to filter' \
+      --width=68 \
+      --lines=20 \
+      --no-run-if-empty \
+  >/dev/null

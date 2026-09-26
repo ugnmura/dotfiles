@@ -1,0 +1,31 @@
+#!/bin/sh
+
+drm_link=/dev/dri/by-path/pci-0000:04:00.0-card
+drm_device=$(readlink -f "$drm_link" 2>/dev/null || true)
+
+[ -n "$drm_device" ] || {
+    printf '[DRM-RESOLVE] FAIL reason=unresolved link=%s\n' "$drm_link" >&2
+    exit 1
+}
+
+case "$drm_device" in
+    *:*)
+        printf '[DRM-RESOLVE] FAIL reason=colon-in-resolved-path path=%s\n' "$drm_device" >&2
+        exit 1
+        ;;
+esac
+
+[ -c "$drm_device" ] || {
+    printf '[DRM-RESOLVE] FAIL reason=not-character-device path=%s\n' "$drm_device" >&2
+    exit 1
+}
+
+card_name=$(basename "$drm_device")
+driver=$(basename "$(readlink -f "/sys/class/drm/$card_name/device/driver" 2>/dev/null || true)")
+[ "$driver" = amdgpu ] || {
+    printf '[DRM-RESOLVE] FAIL reason=unexpected-driver path=%s driver=%s\n' \
+        "$drm_device" "${driver:-unknown}" >&2
+    exit 1
+}
+
+printf '%s\n' "$drm_device"

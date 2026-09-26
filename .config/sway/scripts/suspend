@@ -1,0 +1,7 @@
+#!/bin/sh
+
+/home/eugene/.config/sway/scripts/lock &
+lock_pid=$!
+sleep 0.35
+loginctl suspend
+wait "$lock_pid"

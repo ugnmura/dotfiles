@@ -1,0 +1,102 @@
+#!/usr/bin/env bash
+
+set -u
+
+weather_command="${XDG_CONFIG_HOME:-$HOME/.config}/waybar/scripts/weather"
+weather_refresh_seconds=900
+weather_payload='{"text":"󰖪 --°","tooltip":"Weather unavailable","class":"unavailable","alt":"Weather unavailable"}'
+notification_payload='{"text":"0","alt":"none","tooltip":"","class":"none"}'
+
+coproc NOTIFICATION_STREAM { exec swaync-client -swb; }
+stream_pid="$NOTIFICATION_STREAM_PID"
+
+cleanup() {
+    trap - EXIT HUP INT TERM
+    if kill -0 "$stream_pid" 2>/dev/null; then
+        kill "$stream_pid" 2>/dev/null || true
+        wait "$stream_pid" 2>/dev/null || true
+    fi
+}
+
+trap cleanup EXIT HUP INT TERM
+
+refresh_weather() {
+    local payload
+
+    payload="$($weather_command --status 2>/dev/null)" || return 0
+    if jq -e 'type == "object" and .text' >/dev/null 2>&1 <<<"$payload"; then
+        weather_payload="$payload"
+    fi
+}
+
+emit_status() {
+    jq -cn \
+        --argjson weather "$weather_payload" \
+        --argjson notification "$notification_payload" '
+        ($notification.text | tonumber? // 0) as $count
+        | ($notification.alt // "none") as $state
+        | ($state | startswith("dnd")) as $dnd
+        | (if $state == "notification" then "󱅫"
+           elif $state == "dnd-notification" then "󰂠"
+           elif $state == "dnd-none" then "󰪓"
+           elif $state == "inhibited-notification" then "󰂛"
+           elif $state == "inhibited-none" then "󰪑"
+           elif $state == "dnd-inhibited-notification" then "󰂛"
+           elif $state == "dnd-inhibited-none" then "󰪑"
+           else "󰂜"
+           end) as $notification_icon
+        | (($weather.tooltip // "Weather unavailable")
+            | gsub("\\\\n"; "\n")
+            | split("\n\n")[0]) as $forecast
+        | {
+            text: (
+              ($weather.text // "󰖪 --°")
+              + "  ·  "
+              + $notification_icon
+              + (if $count > 0 then " \($count)" else "" end)
+            ),
+            tooltip: (
+              "Dashboard\n"
+              + (if $count == 0 then "No unread notifications"
+                 elif $count == 1 then "1 unread notification"
+                 else "\($count) unread notifications"
+                 end)
+              + (if $dnd then "\nDo Not Disturb is on" else "" end)
+              + "\n\n"
+              + $forecast
+              + "\n\nLeft-click: dashboard · Middle-click: forecast · Right-click: refresh"
+            ),
+            class: $state,
+            alt: $state
+          }
+    '
+}
+
+refresh_weather
+emit_status
+next_weather_refresh=$(( $(date +%s) + weather_refresh_seconds ))
+
+while :; do
+    now="$(date +%s)"
+    wait_seconds=$(( next_weather_refresh - now ))
+    (( wait_seconds > 0 )) || wait_seconds=1
+
+    if IFS= read -r -t "$wait_seconds" payload <&"${NOTIFICATION_STREAM[0]}"; then
+        if jq -e 'type == "object" and .alt' >/dev/null 2>&1 <<<"$payload"; then
+            notification_payload="$payload"
+            emit_status
+        fi
+        continue
+    fi
+
+    now="$(date +%s)"
+    if (( now >= next_weather_refresh )); then
+        refresh_weather
+        emit_status
+        next_weather_refresh=$(( now + weather_refresh_seconds ))
+    else
+        break
+    fi
+done
+
+wait "$stream_pid" 2>/dev/null || true

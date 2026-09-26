@@ -5,10 +5,14 @@ config.h
 .ccls-cache
 .cache
 .vscode
+graphify-out/
 compile_commands.json
 
 # Prerequisites
 *.d
+!/.config/wireplumber/
+!/.config/wireplumber/wireplumber.conf.d/
+!/.config/wireplumber/wireplumber.conf.d/*.conf
 
 # Object files
 *.o

@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=SwayFX (managed)
+Comment=Polished SwayFX session with session-scoped D-Bus and services
+Exec=dbus-run-session -- /home/eugene/.config/sway/start-sway
+Type=Application
+DesktopNames=sway
+Keywords=tiling;wayland;compositor;

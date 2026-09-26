@@ -1,0 +1,61 @@
+#!/bin/sh
+
+# Fuzzel is intentionally single-instance. Serialize requests so key repeat or
+# impatient double presses cannot make multiple instances fight over its lock.
+runtime_dir="${XDG_RUNTIME_DIR:-/tmp}"
+control_lock="$runtime_dir/sway-app-launcher.lock"
+started_at_file="$runtime_dir/sway-app-launcher.started-at"
+launcher_pid_file="$runtime_dir/sway-app-launcher.pid"
+
+exec 9>"$control_lock"
+flock -n -x 9 || exit 0
+
+now_ms=$(date +%s%3N)
+launcher_pids=$(pgrep -u "$(id -u)" -x fuzzel 2>/dev/null || true)
+
+if [ -n "$launcher_pids" ] && [ -r "$started_at_file" ]; then
+    started_at_ms=$(sed -n '1p' "$started_at_file")
+    case "$started_at_ms" in
+        ''|*[!0-9]*) started_at_ms=0 ;;
+    esac
+
+    launcher_age_ms=$((now_ms - started_at_ms))
+    if [ "$launcher_age_ms" -ge 0 ] && [ "$launcher_age_ms" -lt 750 ]; then
+        exit 0
+    fi
+fi
+
+if [ -n "$launcher_pids" ]; then
+    for launcher_pid in $launcher_pids; do
+        kill "$launcher_pid" 2>/dev/null || true
+    done
+
+    for _attempt in 1 2 3 4 5; do
+        pgrep -u "$(id -u)" -x fuzzel >/dev/null 2>&1 || break
+        sleep 0.01
+    done
+
+    remaining_pids=$(pgrep -u "$(id -u)" -x fuzzel 2>/dev/null || true)
+    if [ -n "$remaining_pids" ]; then
+        for launcher_pid in $remaining_pids; do
+            kill -KILL "$launcher_pid" 2>/dev/null || true
+        done
+    fi
+fi
+
+setsid -f fuzzel --log-level=error --log-no-syslog 9>&- </dev/null >/dev/null 2>&1
+
+launcher_pid=''
+for _attempt in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
+    launcher_pid=$(pgrep -n -u "$(id -u)" -x fuzzel 2>/dev/null || true)
+    [ -n "$launcher_pid" ] && break
+    sleep 0.005
+done
+
+[ -n "$launcher_pid" ] || exit 1
+printf '%s\n' "$now_ms" >"$started_at_file"
+printf '%s\n' "$launcher_pid" >"$launcher_pid_file"
+
+# Hold the controller lock until Fuzzel has acquired its own singleton lock.
+sleep 0.05
+kill -0 "$launcher_pid" 2>/dev/null

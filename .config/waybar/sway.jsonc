@@ -1,0 +1,214 @@
+{
+  "reload_style_on_change": true,
+  "layer": "top",
+  "position": "top",
+  "height": 44,
+  "margin-top": 10,
+  "margin-left": 14,
+  "margin-right": 14,
+  "spacing": 2,
+
+  "modules-left": [
+    "custom/launcher",
+    "custom/window-switcher",
+    "sway/workspaces",
+    "sway/mode",
+    "sway/window"
+  ],
+  "modules-center": [
+    "clock"
+  ],
+  "modules-right": [
+    "mpris",
+    "group/tray-expander",
+    "privacy",
+    "idle_inhibitor",
+    "custom/dashboard",
+    "network",
+    "bluetooth",
+    "pulseaudio",
+    "backlight",
+    "battery",
+    "custom/power"
+  ],
+
+  "custom/launcher": {
+    "format": "󰍜",
+    "tooltip-format": "Applications · Super+P\nLeft-click: launcher · Middle-click: windows\nRight-click: shortcut help · Super+Shift+/",
+    "on-click": "/home/eugene/.config/sway/scripts/app-launcher",
+    "on-click-middle": "swayr switch-window",
+    "on-click-right": "/home/eugene/.config/sway/scripts/keybindings"
+  },
+
+  "custom/window-switcher": {
+    "format": "󰕰",
+    "tooltip-format": "Window switcher · Super+W\nLeft-click: windows · Right-click: workspaces and windows\nLast window · Super+Tab",
+    "on-click": "swayr switch-window",
+    "on-click-right": "swayr switch-workspace-or-window"
+  },
+
+  "sway/workspaces": {
+    "format": "{name}",
+    "disable-scroll": true,
+    "all-outputs": false,
+    "on-click": "activate",
+    "sort-by-number": true
+  },
+
+  "sway/mode": {
+    "format": "{}",
+    "tooltip": false
+  },
+
+  "sway/window": {
+    "format": "{title}",
+    "max-length": 44,
+    "separate-outputs": true,
+    "rewrite": {
+      "(.*) — Mozilla Firefox": "$1",
+      "(.*) - Chromium": "$1",
+      "(.*) - Visual Studio Code": "$1"
+    }
+  },
+
+  "clock": {
+    "format": "{:%a  %d %b   ·   %H:%M}",
+    "format-alt": "{:%A, %d %B %Y   ·   %H:%M:%S}",
+    "tooltip-format": "<tt><small>{calendar}</small></tt>"
+  },
+
+  "mpris": {
+    "format": "{player_icon} {artist} — {title}",
+    "format-paused": "{status_icon} {artist} — {title}",
+    "format-stopped": "",
+    "max-length": 28,
+    "player-icons": {
+      "default": "",
+      "spotify": ""
+    },
+    "status-icons": {
+      "paused": ""
+    },
+    "tooltip-format": "Media controls\nLeft-click: play/pause · Middle-click: previous\nRight-click: next",
+    "on-click": "playerctl play-pause",
+    "on-click-middle": "playerctl previous",
+    "on-click-right": "playerctl next"
+  },
+
+  "group/tray-expander": {
+    "orientation": "horizontal",
+    "drawer": {
+      "transition-duration": 150,
+      "children-class": "tray-child",
+      "transition-left-to-right": false
+    },
+    "modules": [
+      "custom/tray-toggle",
+      "tray"
+    ]
+  },
+
+  "custom/tray-toggle": {
+    "format": "󰅀",
+    "tooltip-format": "Background apps\nHover to expand the system tray"
+  },
+
+  "tray": {
+    "icon-size": 16,
+    "spacing": 8
+  },
+
+  "privacy": {
+    "icon-spacing": 5,
+    "icon-size": 14,
+    "transition-duration": 220
+  },
+
+  "idle_inhibitor": {
+    "format": "{icon}",
+    "format-icons": {
+      "activated": "",
+      "deactivated": ""
+    },
+    "tooltip-format-activated": "Idle lock paused\nClick to resume automatic locking",
+    "tooltip-format-deactivated": "Idle lock active\nClick to keep the session awake"
+  },
+
+  "custom/dashboard": {
+    "tooltip": true,
+    "format": "{text}",
+    "return-type": "json",
+    "exec-if": "test -x /home/eugene/.config/waybar/scripts/dashboard-status",
+    "exec": "exec /home/eugene/.config/waybar/scripts/dashboard-status",
+    "on-click": "swaync-client -t -sw",
+    "on-click-middle": "/home/eugene/.config/waybar/scripts/weather --details",
+    "on-click-right": "/home/eugene/.config/waybar/scripts/weather --refresh >/dev/null && pkill -SIGUSR2 -x waybar",
+    "escape": true
+  },
+
+  "network": {
+    "format-wifi": "{icon}",
+    "format-ethernet": "󰈀",
+    "format-linked": "󰈁",
+    "format-disconnected": "󰤭",
+    "format-icons": ["󰤯", "󰤟", "󰤢", "󰤥", "󰤨"],
+    "tooltip-format-wifi": "{essid} · {signalStrength}%\n{ipaddr}\nClick: Wi-Fi &amp; Networking settings",
+    "tooltip-format-ethernet": "{ifname}\n{ipaddr}\nClick: Network settings",
+    "tooltip-format-disconnected": "Network disconnected\nClick: Wi-Fi &amp; Networking settings",
+    "interval": 5,
+    "on-click": "systemsettings kcm_networkmanagement"
+  },
+
+  "bluetooth": {
+    "format": "",
+    "format-disabled": "",
+    "format-off": "󰂲",
+    "format-no-controller": "",
+    "format-connected": " {num_connections}",
+    "tooltip-format": "Bluetooth\nClick: devices and settings",
+    "tooltip-format-connected": "{device_enumerate}\nClick: devices and settings",
+    "tooltip-format-enumerate-connected": "{device_alias}",
+    "on-click": "blueman-manager"
+  },
+
+  "pulseaudio": {
+    "format": "{icon} {volume}%",
+    "format-bluetooth": "󰂰 {volume}%",
+    "format-muted": "󰖁",
+    "format-icons": {
+      "headphone": "",
+      "headset": "",
+      "default": ["", "", ""]
+    },
+    "tooltip-format": "{desc}\nLeft-click: volume mixer · Scroll: adjust volume\nRight-click: mute or unmute",
+    "scroll-step": 5,
+    "on-click": "pavucontrol",
+    "on-click-right": "pactl set-sink-mute @DEFAULT_SINK@ toggle"
+  },
+
+  "backlight": {
+    "device": "amdgpu_bl0",
+    "format": "󰃠 {percent}%",
+    "tooltip-format": "Brightness {percent}%\nScroll: adjust brightness",
+    "scroll-step": 5
+  },
+
+  "battery": {
+    "interval": 10,
+    "states": {
+      "warning": 25,
+      "critical": 12
+    },
+    "format": "{icon} {capacity}%",
+    "format-charging": "󰂄 {capacity}%",
+    "format-plugged": "󰚥 {capacity}%",
+    "format-icons": ["󰁺", "󰁻", "󰁼", "󰁽", "󰁾", "󰁿", "󰂀", "󰂁", "󰂂", "󰁹"],
+    "tooltip-format": "Battery {capacity}%\n{time} · {power} W"
+  },
+
+  "custom/power": {
+    "format": "⏻",
+    "tooltip-format": "Session and power · Super+Esc\nClick: lock, log out, suspend, reboot or shut down",
+    "on-click": "/home/eugene/.config/sway/scripts/power-menu"
+  }
+}
