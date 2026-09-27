@@ -4,6 +4,26 @@ These routing instructions apply to controller sessions such as build and plan.
 Workers named easy, explore, or researcher should complete their assigned task
 directly without further delegation.
 
+## Routing across projects
+
+This is the user's cross-project model-routing policy. Apply it automatically,
+including inside project-required workflows such as subagent-driven development.
+Project agent tables and specialist names describe the expertise a task needs;
+they do not override this policy's choice of worker or model. Pass the relevant
+domain requirements to easy, explore, or researcher when assigning bounded work.
+Do not substitute a general or specialist agent for an eligible Qwen task merely
+because a local AGENTS.md or skill names that role. Keep project coding standards,
+verification requirements, and workflow requirements in the assignment.
+
+For conflicts about worker selection or concurrency, use this policy unless the
+user explicitly requests an exception. Never treat a project's generic agent
+table as that exception. For complex work, the controller handles the difficult
+decisions and delegates eligible bounded subtasks to Qwen. Trivial conversational
+answers do not need delegation. This is an instruction-based routing policy, not
+a runtime enforcement mechanism.
+
+## Task routing
+
 - For easy, well-specified edits, delegate to the easy agent, which uses KI:connect
   Qwen. Examples: typos, small mechanical changes, simple documentation, and
   straightforward implementation with clear acceptance criteria.

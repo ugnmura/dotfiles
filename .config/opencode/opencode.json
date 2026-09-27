@@ -118,5 +118,118 @@
         }
       }
     }
+  },
+  "mcp": {
+    "servers": {
+      "posthog": {
+        "type": "remote",
+        "url": "https://mcp.posthog.com/mcp"
+      },
+      "anki": {
+        "type": "remote",
+        "url": "http://127.0.0.1:3141/"
+      },
+      "context7": {
+        "type": "remote",
+        "url": "https://mcp.context7.com/mcp"
+      },
+      "cloudflare-api": {
+        "type": "remote",
+        "url": "https://mcp.cloudflare.com/mcp"
+      },
+      "cloudflare-docs": {
+        "type": "remote",
+        "url": "https://docs.mcp.cloudflare.com/mcp"
+      },
+      "websearch": {
+        "type": "remote",
+        "url": "https://mcp.exa.ai/mcp?tools=web_search_exa"
+      },
+      "grep_app": {
+        "type": "remote",
+        "url": "https://mcp.grep.app"
+      },
+      "playwright": {
+        "type": "local",
+        "command": ["npx", "-y", "@playwright/mcp@latest"]
+      },
+      "chrome-devtools": {
+        "type": "local",
+        "command": ["npx", "-y", "chrome-devtools-mcp@1.9.0"]
+      },
+      "lsp": {
+        "type": "local",
+        "command": [
+          "node",
+          "/Users/eugene/.cache/opencode/packages/oh-my-openagent@latest/node_modules/oh-my-openagent/packages/lsp-daemon/dist/cli.js",
+          "mcp"
+        ],
+        "environment": {
+          "LSP_TOOLS_MCP_USER_CONFIG": "/Users/eugene/.config/opencode/lsp.json",
+          "LSP_TOOLS_MCP_INSTALL_DECISIONS": "/Users/eugene/.config/opencode/lsp-install-decisions.json"
+        }
+      },
+      "magic": {
+        "type": "remote",
+        "url": "https://21st.dev/api/mcp"
+      },
+      "codegraph": {
+        "type": "local",
+        "command": ["/Users/eugene/.omo/codegraph/bin/codegraph", "serve", "--mcp"],
+        "environment": {
+          "CODEGRAPH_INSTALL_DIR": "/Users/eugene/.omo/codegraph",
+          "CODEGRAPH_NO_DOWNLOAD": "1",
+          "CODEGRAPH_TELEMETRY": "0",
+          "DO_NOT_TRACK": "1"
+        }
+      },
+      "cua_repl": {
+        "type": "local",
+        "command": [
+          "/Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node",
+          "/Applications/ChatGPT.app/Contents/Resources/cua_node/lib/node_modules/@oai/cua-repl/bin/cua-repl.mjs"
+        ],
+        "environment": {
+          "NODE_REPL_NATIVE_PIPE_CONNECT_TIMEOUT_MS": "1000",
+          "NODE_REPL_NODE_MODULE_DIRS": "/Applications/ChatGPT.app/Contents/Resources/cua_node/lib/node_modules",
+          "NODE_REPL_NODE_PATH": "/Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node",
+          "NODE_REPL_TRUSTED_CODE_PATHS": "/Users/eugene/.codex:/Applications/ChatGPT.app/Contents/Resources/cua_node/lib/node_modules",
+          "CODEX_HOME": "/Users/eugene/.codex",
+          "BROWSER_USE_AVAILABLE_BACKENDS": "chrome,iab",
+          "BROWSER_USE_TINYSKY_ENABLED": "1",
+          "NODE_REPL_INSTRUCTIONS_USE_CASE_BROWSER": "Control the in-app browser in conjunction with the Browser Plugin.",
+          "NODE_REPL_INSTRUCTIONS_USE_CASE_CHROME": "Control the Chrome browser in conjunction with the Chrome Plugin. Prefer this method of controlling Chrome over alternatives (such as Computer Use) unless the user explicitly mentions an alternative.",
+          "NODE_REPL_INSTRUCTIONS_USE_CASE_COMPUTER_USE": "Control desktop apps on macOS through Computer Use.",
+          "BROWSER_USE_CODEX_APP_BUILD_FLAVOR": "prod",
+          "BROWSER_USE_CODEX_APP_VERSION": "26.908.31748",
+          "NODE_REPL_TRUSTED_SERVICES": "{\"browser\":\"@oai/browser-desktop/service\",\"sky\":\"@oai/sky/service\"}",
+          "SKY_CUA_SERVICE_PATH": "/Users/eugene/.codex/computer-use/Codex Computer Use.app",
+          "CODEX_CLI_PATH": "/Applications/ChatGPT.app/Contents/Resources/codex",
+          "CUA_REPL_NODE_REPL_PATH": "/Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node_repl",
+          "CUA_REPL_ENABLED_SURFACES": "browser,computer"
+        }
+      },
+      "node_repl": {
+        "type": "local",
+        "command": ["/Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node_repl"],
+        "environment": {
+          "NODE_REPL_NATIVE_PIPE_CONNECT_TIMEOUT_MS": "1000",
+          "NODE_REPL_NODE_MODULE_DIRS": "/Applications/ChatGPT.app/Contents/Resources/cua_node/lib/node_modules",
+          "NODE_REPL_NODE_PATH": "/Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node",
+          "NODE_REPL_TRUSTED_CODE_PATHS": "/Users/eugene/.codex:/Applications/ChatGPT.app/Contents/Resources/cua_node/lib/node_modules",
+          "CODEX_HOME": "/Users/eugene/.codex",
+          "BROWSER_USE_AVAILABLE_BACKENDS": "chrome,iab",
+          "BROWSER_USE_TINYSKY_ENABLED": "1",
+          "NODE_REPL_INSTRUCTIONS_USE_CASE_BROWSER": "",
+          "NODE_REPL_INSTRUCTIONS_USE_CASE_CHROME": "",
+          "NODE_REPL_INSTRUCTIONS_USE_CASE_COMPUTER_USE": "",
+          "BROWSER_USE_CODEX_APP_BUILD_FLAVOR": "prod",
+          "BROWSER_USE_CODEX_APP_VERSION": "26.908.31748",
+          "NODE_REPL_TRUSTED_SERVICES": "{\"browser\":\"/Users/eugene/.codex/plugins/cache/openai-bundled/browser/26.908.31748/scripts/browser-service.mjs\",\"sky\":\"@oai/sky/service\"}",
+          "SKY_CUA_SERVICE_PATH": "/Users/eugene/.codex/computer-use/Codex Computer Use.app",
+          "CODEX_CLI_PATH": "/Applications/ChatGPT.app/Contents/Resources/codex"
+        }
+      }
+    }
   }
 }
