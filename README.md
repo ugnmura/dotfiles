@@ -28,3 +28,13 @@ other directories tracked here.
 
 The guarded Void/SDDM installation helpers live in `.config/sway`. Review them
 before running because they intentionally modify system-owned files.
+
+## Continuous integration
+
+The `Build Project` workflow (`.github/workflows/build.yml`) runs on pushes
+and pull requests to `main`. It only performs shell syntax checks (`sh -n`,
+`bash -n`, `zsh -n` selected from each script's shebang, with `.zshrc` always
+checked with `zsh -n`); it never executes any desktop or installation
+script. Because the check is syntax-only, it cannot validate runtime behavior
+against a live desktop (Sway, SwayFX, SDDM, portals) — verify changes on an
+actual session before relying on them.

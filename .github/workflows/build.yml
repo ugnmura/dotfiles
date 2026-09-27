@@ -5,32 +5,50 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    container:
-      image: archlinux
-      options: --privileged
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Install
+      - name: Install zsh
         run: |
-          chmod +x ./arch-install.sh
-          ./arch-install.sh
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y zsh
 
-      - name: Upload chadwm artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: chadwm
-          path: ./suckless/chadwm/dwm
-          retention-days: 5
+      - name: Syntax check shell scripts
+        shell: bash
+        run: |
+          set -euo pipefail
 
-      - name: Upload slstatus artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: slstatus
-          path: ./suckless/slstatus/slstatus
-          retention-days: 5
+          count=0
+          while IFS= read -r -d '' file; do
+            IFS= read -r first_line < "$file" || true
+            first_line=${first_line%$'\r'}
+            case "$file" in
+              .zshrc)
+                zsh -n -- "$file"
+                echo "checked $file (zsh -n)"
+                count=$((count + 1))
+                continue
+                ;;
+            esac
+            case "$first_line" in
+              "#!/bin/sh"|"#!/bin/sh "*) parser=sh ;;
+              "#!/bin/bash"|"#!/bin/bash "*|"#!/usr/bin/env bash"|"#!/usr/bin/env bash "*) parser=bash ;;
+              *) continue ;;
+            esac
+            "$parser" -n -- "$file"
+            echo "checked $file ($parser -n)"
+            count=$((count + 1))
+          done < <(git ls-files -z)
+
+          echo "Checked $count file(s)."
+          [ "$count" -gt 0 ]
