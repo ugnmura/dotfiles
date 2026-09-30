@@ -27,12 +27,6 @@ for distance in 1 2 3 4 5 6 7 8 9 10; do
             '.[] | select(.num == $number) | .output' \
         | sed -n '1p')
 
-    # Preserve the two explicit output homes in the main Sway configuration.
-    if { [ "$candidate" -eq 1 ] && [ "$current_output" != 'eDP-1' ]; } \
-        || { [ "$candidate" -eq 5 ] && [ "$current_output" != 'HDMI-A-1' ]; }; then
-        continue
-    fi
-
     # Existing local workspaces are selected; unused numbers are created on
     # the focused output. Numbers currently owned by the other output are skipped.
     if [ -z "$owner" ] || [ "$owner" = "$current_output" ]; then
